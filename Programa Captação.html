@@ -47,81 +47,68 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 <script>
-  // Substitua por sua chave de API real
   const API_KEY = 'AIzaSyAxGbdWe639fXoxSAnogiMC_sJBFn5uXsk';
-  const ID_DA_PLANILHA = '1widc-6fjPQ6zVmuVKj2xG3kxSf9LuHXLHDrCEy1nyTo';
-  const NOME_DA_PLANILHA = 'Programa Captação';
+  const SPREADSHEET_ID = '1widc-6fjPQ6zVmuVKj2xG3kxSf9LuHXLHDrCEy1nyTo';
+  const RANGE = 'CADASTRO!A:B';
 
-  function handleClientLoad() {
-    gapi.load('client', function() {
-      gapi.client.init({
-        apiKey: 'AIzaSyAxGbdWe639fXoxSAnogiMC_sJBFn5uXsk',
-        discoveryDocs: ["https://sheets.googleapis.com/$discovery/v4/spreadsheets/"]
-      }).then(function() {
-        // Manipulador de envio de formulário
-        $('#googleSheetsForm').submit(function(event) {
-          event.preventDefault();
-
-          const placa = $('#placa').val();
-          const nome = $('#nome').val();
-          const valores = [[placa, nome]];
-
-          submitDataToSheet(valores)
-            .then(() => {
-              alert('Dados enviados com sucesso!');
-              limparFormulario();
-              lerDados();
-            })
-            .catch(error => {
-              console.error('Erro ao enviar dados:', error);
-              alert('Erro ao enviar dados. Por favor, tente novamente mais tarde.');
-            });
-        });
-
-        // Função para enviar dados para a Planilha Google
-        function submitDataToSheet(values) {
-          return gapi.client.sheets.spreadsheets.values.append({
-            spreadsheetId: '1widc-6fjPQ6zVmuVKj2xG3kxSf9LuHXLHDrCEy1nyTo',
-            range: 'CADASTRO!A:B',
-            valueInputOption: 'RAW',
-            resource: {
-              values: values
-            }
-          });
-        }
-
-        // Função para ler dados da Planilha Google e exibir na tabela
-        function lerDados() {
-          gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: '1widc-6fjPQ6zVmuVKj2xG3kxSf9LuHXLHDrCEy1nyTo',
-            range: 'CADASTRO!A:B'
-          }).then(function(response) {
-            const values = response.result.values || [];
-
-            const tabela = $('#tabela tbody');
-            tabela.empty(); // Limpar dados existentes
-
-            for (const row of values) {
-              const tableRow = `<tr><td>${row[0]}</td><td>${row[1]}</td></tr>`;
-              tabela.append(tableRow);
-            }
-          });
-        }
-
-        // Limpar formulário após envio bem-sucedido
-        function limparFormulario() {
-          $('#placa').val('');
-          $('#nome').val('');
-        }
-
-        // Chamar função para ler dados ao carregar a página
-        lerDados();
-      });
+  function loadSheetsApi() {
+    gapi.client.init({
+      apiKey: ["AIzaSyAxGbdWe639fXoxSAnogiMC_sJBFn5uXsk"],
+      discoveryDocs: ["https://sheets.googleapis.com/$discovery/v4/spreadsheets/"]
+    }).then(function() {
+      console.log('API do Google Sheets carregada com sucesso');
+    }).catch(function(error) {
+      console.error('Erro ao carregar a API do Google Sheets:', error);
     });
   }
 
-  // Carregar a API Google Sheets
+  function handleClientLoad() {
+    gapi.load('client', loadSheetsApi);
+  }
+
   handleClientLoad();
+
+  $('#googleSheetsForm').submit(function(event) {
+    event.preventDefault();
+
+    const placa = $('#placa').val();
+    const nome = $('#nome').val();
+    const values = [[placa, nome]];
+
+    gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId: '1widc-6fjPQ6zVmuVKj2xG3kxSf9LuHXLHDrCEy1nyTo',
+      range: RANGE,
+      valueInputOption: 'RAW',
+      resource: {
+        values: values
+      }
+    }).then(function() {
+      console.log('Dados enviados com sucesso');
+      lerDados();
+    }).catch(function(error) {
+      console.error('Erro ao enviar dados:', error);
+      alert('Erro ao enviar dados. Por favor, tente novamente mais tarde.');
+    });
+  });
+
+  function lerDados() {
+    gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: '1widc-6fjPQ6zVmuVKj2xG3kxSf9LuHXLHDrCEy1nyTo',
+      range: RANGE
+    }).then(function(response) {
+      const values = response.result.values || [];
+
+      const tabela = $('#tabela tbody');
+      tabela.empty(); // Limpar dados existentes
+
+      for (const row of values) {
+        const tableRow = `<tr><td>${row[0]}</td><td>${row[1]}</td></tr>`;
+        tabela.append(tableRow);
+      }
+    });
+  }
+
+  lerDados();
 </script>
 
 <!-- Load the API client -->
